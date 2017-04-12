@@ -1,5 +1,4 @@
 #include <Servo.h>
-#include <string.h>
 
 const char shootPin = 3;
 const char yawPin = 10;
@@ -34,12 +33,15 @@ void updateSerial(char incomingByte) {
 
 void setup() {
   // put your setup code here, to run once:
+  pitchAngle = 0;
+  yawAngle = 0;
   Serial.begin(115200);
   delay(10);
   pinMode(shootPin, OUTPUT);
   pitchServo.attach(pitchPin);
   yawServo.attach(yawPin);
   Serial.println("Start");
+  return;
 }
 
 void loop() {
@@ -47,4 +49,5 @@ void loop() {
   if (Serial.available()) {
     updateSerial(Serial.read());
   }
+  return;
 }
