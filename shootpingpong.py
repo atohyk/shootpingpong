@@ -3,6 +3,8 @@ import serial
 import numpy as np
 import time
 
+
+
 #system macros
 millis = lambda: int(round(time.time() * 1000))
 
@@ -10,18 +12,53 @@ millis = lambda: int(round(time.time() * 1000))
 pitchAngle = 0
 yawAngle = 0
 lastPrintTime = 0
+lastShootTime = millis()
 
 #serial init
 ser = serial.Serial()
 ser.baudrate = 115200
 ser.port= 'COM12'
-#ser.open()
+ser.open()
 
 if not ser.is_open:
     print('Unable to open Serial Port')
 
+#functions
+def shoot():
+    shootString = 'S'+'\n'
+    ser.write(shootString.encode('utf-8'))
+
+def up():
+    pitchAngle += 10
+    if pitchAngle > 180:
+        pitchAngle= 180
+    pitchAngleString = 'P'+str(pitchAngle)+'\n'
+    ser.write(pitchAngleString.encode('utf-8'))
+
+def down():
+    pitchAngle -= 10
+    if pitchAngle < 0:
+        pitchAngle = 0
+    pitchAngleString = 'P'+str(pitchAngle)+'\n'
+    ser.write(pitchAngleString.encode('utf-8'))    
+
+def left():
+    yawAngle -= 10
+    if yawAngle < 0:
+        yawAngle = 0
+    yawAngleString = 'P'+str(yawAngle)+'\n'
+    ser.write(yawAngleString.encode('utf-8'))
+
+def right():
+    yawAngle += 10
+    if yawAngle > 180:
+        yawAngle = 180
+    yawAngleString = 'P'+str(yawAngle)+'\n'
+    ser.write(yawAngleString.encode('utf-8'))    
+
+    
 #capture the webcam video feed and init subtractor
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 fgbg = cv2.createBackgroundSubtractorMOG2()
 kernel = np.ones((5,5),np.uint8)
 
@@ -49,11 +86,12 @@ while(True):
         
     cv2.imshow('frame', frame)
     #CONVERT cX and cY into pitchAngle and yawAngle
+    '''
     
     #write angles to string
     if(millis() - lastPrintTime > 50) : #update rate of 20hz
         if ser.is_open:
-            lastTime = millis()
+            lastPrintTime = millis()
             pitchAngleString = 'P'+str(pitchAngle)+'\n'
             yawAngleString = 'Y'+str(yawAngle)+'\n'
             shootString = 'S'+'\n'
@@ -62,13 +100,19 @@ while(True):
             ser.write(pitchAngleString.encode('utf-8'))
             ser.write(yawAngleString.encode('utf-8'))
             ser.write(shootString.encode('utf-8'))
-    
+    '''
        
     #quit if user presses q
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        print(fgmask)
         break
+    elif cv2.waitKey(1) & 0xFF == ord(' '):
+        if lastShootTime - millis() > 500:
+            shootString = 'S'+'\n'
+            ser.write(shootString.encode('utf-8'))
+            lastShootTime = millis()
 
 #deinit
 cap.release()
 cv2.destroyAllWindows()
+ser.close()
+
